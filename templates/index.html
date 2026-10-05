@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+{% block title %}Tomato Disease Detector — Upload{% endblock %}
+
+{% block content %}
+
+<!-- ── Hero ── -->
+<section class="hero">
+  <div class="hero-text">
+    <h1>Tomato Leaf Disease Detection</h1>
+    <p>Upload a photo of a tomato leaf and our ML model will identify whether it is healthy or affected by one of 9 diseases — instantly.</p>
+  </div>
+  <!--<div class="hero-badges">
+    <span class="badge">KNN</span>
+    <span class="badge">SVM</span>
+    <span class="badge">Random Forest</span>
+    <span class="badge">PCA</span>
+    <span class="badge">10 Classes</span>
+  </div> -->
+</section>
+
+<!-- ── Upload card ── -->
+<section class="upload-section">
+  <div class="card upload-card">
+    <form id="uploadForm" action="{{ url_for('predict') }}" method="POST" enctype="multipart/form-data">
+
+      <!-- Drop zone -->
+      <div class="drop-zone" id="dropZone">
+        <div class="drop-icon">📷</div>
+        <p class="drop-title">Drag &amp; drop your image here</p>
+        <p class="drop-sub">or click to browse</p>
+        <p class="drop-hint">Supports JPG, JPEG, PNG &bull; Max 16 MB</p>
+        <input type="file" name="file" id="fileInput" accept=".jpg,.jpeg,.png" hidden />
+      </div>
+
+      <!-- Preview -->
+      <div class="preview-box" id="previewBox" style="display:none;">
+        <img id="previewImg" src="" alt="Preview" />
+        <div class="preview-info">
+          <span id="previewName" class="preview-name"></span>
+          <button type="button" class="btn-ghost" id="changeBtn">Change image</button>
+        </div>
+      </div>
+
+      <!-- Submit -->
+      <button type="submit" class="btn-primary" id="submitBtn" disabled>
+        <span id="btnText">Analyse Leaf</span>
+        <span id="btnSpinner" class="spinner" style="display:none;"></span>
+      </button>
+
+    </form>
+  </div>
+</section>
+
+<!-- ── Disease classes info ── -->
+<section class="classes-section">
+  <h2 class="section-title">Detectable Conditions</h2>
+  <div class="classes-grid">
+    <div class="class-chip healthy">✅ Healthy</div>
+    <div class="class-chip disease">🦠 Bacterial Spot</div>
+    <div class="class-chip disease">🍂 Early Blight</div>
+    <div class="class-chip disease">💀 Late Blight</div>
+    <div class="class-chip disease">🌿 Leaf Mold</div>
+    <div class="class-chip disease">🔵 Septoria Leaf Spot</div>
+    <div class="class-chip disease">🕷️ Spider Mites</div>
+    <div class="class-chip disease">🎯 Target Spot</div>
+    <div class="class-chip disease">🧬 Tomato Mosaic Virus</div>
+    <div class="class-chip disease">🌀 Yellow Leaf Curl Virus</div>
+  </div>
+</section>
+
+<!-- ── How it works ── -->
+<section class="steps-section">
+  <h2 class="section-title">How It Works</h2>
+  <div class="steps-grid">
+    <div class="step-card">
+      <div class="step-num">1</div>
+      <div class="step-icon">📤</div>
+      <h3>Upload</h3>
+      <p>Take a clear photo of the tomato leaf and upload it above.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-num">2</div>
+      <div class="step-icon">🔬</div>
+      <h3>Analyse</h3>
+      <p>The system extracts colour and texture features, applies PCA, then classifies.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-num">3</div>
+      <div class="step-icon">📋</div>
+      <h3>Results</h3>
+      <p>Get the predicted disease, confidence score, and recommended treatment.</p>
+    </div>
+  </div>
+</section>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const dropZone   = document.getElementById('dropZone');
+  const fileInput  = document.getElementById('fileInput');
+  const previewBox = document.getElementById('previewBox');
+  const previewImg = document.getElementById('previewImg');
+  const previewName= document.getElementById('previewName');
+  const submitBtn  = document.getElementById('submitBtn');
+  const changeBtn  = document.getElementById('changeBtn');
+  const btnText    = document.getElementById('btnText');
+  const btnSpinner = document.getElementById('btnSpinner');
+  const form       = document.getElementById('uploadForm');
+
+  // Click to open file browser
+  dropZone.addEventListener('click', () => fileInput.click());
+
+  // Drag over styling
+  dropZone.addEventListener('dragover', e => {
+    e.preventDefault();
+    dropZone.classList.add('drag-over');
+  });
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+
+  // Drop
+  dropZone.addEventListener('drop', e => {
+    e.preventDefault();
+    dropZone.classList.remove('drag-over');
+    const files = e.dataTransfer.files;
+    if (files.length) handleFile(files[0]);
+  });
+
+  // File input change
+  fileInput.addEventListener('change', () => {
+    if (fileInput.files.length) handleFile(fileInput.files[0]);
+  });
+
+  // Change button resets to drop zone
+  changeBtn.addEventListener('click', () => {
+    fileInput.value = '';
+    previewBox.style.display = 'none';
+    dropZone.style.display   = 'flex';
+    submitBtn.disabled = true;
+  });
+
+  function handleFile(file) {
+    const allowed = ['image/jpeg', 'image/png', 'image/jpg'];
+    if (!allowed.includes(file.type)) {
+      alert('Please upload a JPG or PNG image.');
+      return;
+    }
+    if (file.size > 16 * 1024 * 1024) {
+      alert('File is too large. Maximum size is 16 MB.');
+      return;
+    }
+
+    // Show preview
+    const reader = new FileReader();
+    reader.onload = e => {
+      previewImg.src     = e.target.result;
+      previewName.textContent = file.name;
+      dropZone.style.display   = 'none';
+      previewBox.style.display = 'flex';
+      submitBtn.disabled = false;
+    };
+    reader.readAsDataURL(file);
+
+    // Assign to input so form picks it up
+    const dt = new DataTransfer();
+    dt.items.add(file);
+    fileInput.files = dt.files;
+  }
+
+  // Show spinner on submit
+  form.addEventListener('submit', () => {
+    btnText.style.display    = 'none';
+    btnSpinner.style.display = 'inline-block';
+    submitBtn.disabled = true;
+  });
+</script>
+{% endblock %}

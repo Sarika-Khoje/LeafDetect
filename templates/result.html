@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block title %}Result — {{ short_name }}{% endblock %}
+
+{% block content %}
+
+<section class="result-section">
+
+  <!-- ── Top: image + verdict ── -->
+  <div class="result-top">
+
+    <!-- Uploaded image -->
+    <div class="result-image-wrap">
+      <img src="{{ url_for('static', filename=image_path) }}" alt="Uploaded leaf" class="result-image" />
+    </div>
+
+    <!-- Verdict card -->
+    <div class="verdict-card {% if is_healthy %}verdict-healthy{% else %}verdict-disease{% endif %}">
+
+      <div class="verdict-icon">{{ "✅" if is_healthy else "⚠️" }}</div>
+      <div class="verdict-status">{{ "HEALTHY" if is_healthy else "DISEASE DETECTED" }}</div>
+      <div class="verdict-name">{{ short_name }}</div>
+
+      <!-- Confidence gauge -->
+      <div class="confidence-block">
+        <div class="confidence-label">
+          <span>Confidence</span>
+          <span class="confidence-value">{{ confidence }}%</span>
+        </div>
+        <div class="confidence-bar-bg">
+          <div class="confidence-bar-fill
+            {% if confidence >= 75 %}fill-high
+            {% elif confidence >= 50 %}fill-mid
+            {% else %}fill-low{% endif %}"
+            style="width: {{ confidence }}%;">
+          </div>
+        </div>
+      </div>
+
+      <!-- Disease info -->
+      <div class="info-block">
+        <div class="info-row">
+          <span class="info-label">Description</span>
+          <p class="info-text">{{ info.description }}</p>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Recommended Action</span>
+          <p class="info-text action-text">{{ info.action }}</p>
+        </div>
+        {% if not is_healthy %}
+        <div class="info-row">
+          <span class="info-label">Severity</span>
+          <span class="severity-badge severity-{{ info.severity }}">{{ info.severity | capitalize }}</span>
+        </div>
+        {% endif %}
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── Top-5 probabilities ── -->
+  <div class="card probabilities-card">
+    <h2 class="card-title">Top 5 Predictions</h2>
+    <div class="prob-list">
+      {% for entry in top5 %}
+      <div class="prob-row {% if loop.first %}prob-top{% endif %}">
+        <span class="prob-rank">{{ loop.index }}</span>
+        <span class="prob-name">{{ entry.class }}</span>
+        <div class="prob-bar-bg">
+          <div class="prob-bar-fill {% if loop.first %}prob-bar-best{% endif %}"
+               style="width: {{ entry.bar_width }}%;">
+          </div>
+        </div>
+        <span class="prob-pct">{{ entry.confidence }}%</span>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- ── Actions ── -->
+  <div class="result-actions">
+    <a href="{{ url_for('index') }}" class="btn-primary">🔄 Analyse Another Leaf</a>
+  </div>
+
+</section>
+
+{% endblock %}

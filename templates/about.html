@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}About — LeafLense AI{% endblock %}
+
+{% block content %}
+
+<section class="about-section">
+  <h1 class="page-title">About LeafLense AI</h1>
+  <p class="page-subtitle">A Computer Vision and Machine Learning system for tomato plant disease detection.</p>
+
+  <div class="about-grid">
+
+    <div class="card about-card">
+      <h2>🔬 How It Works</h2>
+      <ol class="about-list">
+        <li><strong>Preprocessing</strong> — Images are resized to 128×128 px, normalised, and converted to RGB, HSV, and LAB colour spaces.</li>
+        <li><strong>Feature Extraction</strong> — Colour histograms, colour statistics, GLCM texture, LBP histograms, and Hu moments are extracted (~530 features).</li>
+        <li><strong>PCA</strong> — Principal Component Analysis reduces features to ~95% explained variance, removing redundancy.</li>
+        <li><strong>Classification</strong> — Three models are trained and compared: KNN, SVM (RBF kernel), and Random Forest.</li>
+      </ol>
+    </div>
+
+    <div class="card about-card">
+      <h2>🤖 Models Compared</h2>
+      <table class="model-table">
+        <thead>
+          <tr><th>Model</th><th>Strengths</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="model-tag">KNN</span></td>
+            <td>Simple, intuitive, no training phase. Uses distance-weighted voting.</td>
+          </tr>
+          <tr>
+            <td><span class="model-tag">SVM</span></td>
+            <td>Effective in high-dimensional spaces. RBF kernel handles non-linear boundaries.</td>
+          </tr>
+          <tr>
+            <td><span class="model-tag">RF</span></td>
+            <td>Ensemble of decision trees. Robust to overfitting, handles class imbalance.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card about-card">
+      <h2>📊 Features Extracted</h2>
+      <div class="feature-chips">
+        <span class="feat-chip">RGB Histograms</span>
+        <span class="feat-chip">HSV Histograms</span>
+        <span class="feat-chip">LAB Histograms</span>
+        <span class="feat-chip">Colour Statistics</span>
+        <span class="feat-chip">GLCM Texture</span>
+        <span class="feat-chip">LBP Histogram</span>
+        <span class="feat-chip">Hu Moments</span>
+        <span class="feat-chip">PCA Reduction</span>
+      </div>
+    </div>
+
+    <div class="card about-card">
+      <h2>🌿 Disease Classes</h2>
+      <ul class="disease-list">
+        <li>✅ Healthy</li>
+        <li>🦠 Bacterial Spot</li>
+        <li>🍂 Early Blight</li>
+        <li>💀 Late Blight</li>
+        <li>🌿 Leaf Mold</li>
+        <li>🔵 Septoria Leaf Spot</li>
+        <li>🕷️ Spider Mites (Two-Spotted)</li>
+        <li>🎯 Target Spot</li>
+        <li>🧬 Tomato Mosaic Virus</li>
+        <li>🌀 Yellow Leaf Curl Virus</li>
+      </ul>
+    </div>
+
+  </div>
+</section>
+
+{% endblock %}
