@@ -16,6 +16,7 @@ uploads/
 
 # Generated results
 results/
+models/random_forest.pkl
 
 # Jupyter temporary files
 .ipynb_checkpoints/
