@@ -23,13 +23,14 @@ from flask import (
 from werkzeug.utils import secure_filename
 
 # ── project modules ────────────────────────────────────────────────────────
-import sys
-sys.path.insert(0, str(Path(__file__).parent))
-from src.predictor import load_predictor
+from prediction import load_predictor
 
 # ── app config ─────────────────────────────────────────────────────────────
 app = Flask(__name__)
-app.secret_key = "tomato-disease-detector-secret"
+app.secret_key = os.environ.get(
+    "FLASK_SECRET_KEY",
+    "temporary-development-key"
+)
 
 UPLOAD_FOLDER  = Path("static/uploads")
 ALLOWED_EXT    = {"jpg", "jpeg", "png", "JPG", "JPEG", "PNG"}
@@ -391,7 +392,12 @@ if __name__ == "__main__":
         print("  Model loaded successfully!")
     except FileNotFoundError as e:
         print(f"\n  WARNING: {e}\n")
+    port = int(os.environ.get("PORT", 5000))
     print("\n  Open your browser and go to:")
-    print("  http://127.0.0.1:5000")
+    print(f"  http://127.0.0.1:{port}")
     print("="*55 + "\n")
-    app.run(debug=False, host="127.0.0.1", port=5000)
+    app.run(
+        host="0.0.0.0",
+        port=port,
+        debug=False
+    )

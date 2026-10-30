@@ -1,13 +1,19 @@
+# Web framework
 flask>=3.1.0
+gunicorn>=22.0.0
+
+# ML / numerics
 numpy>=1.26.4
-pandas>=2.2.2
 scikit-learn>=1.5.2
 scikit-image>=0.24.0
+joblib>=1.4.2
+
+# Image processing
 opencv-python>=4.10.0.84
+Pillow>=10.4.0
+
+# Data / utilities
+pandas>=2.2.2
+tqdm>=4.66.5
 matplotlib>=3.9.2
 seaborn>=0.13.2
-joblib>=1.4.2
-Pillow>=10.4.0
-tqdm>=4.66.5
-ipykernel>=6.29.5
-notebook>=7.2.2
