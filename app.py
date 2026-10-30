@@ -13,6 +13,8 @@ GET  /about       → brief about page
 import os
 import uuid
 from pathlib import Path
+import json
+from datetime import datetime, timezone
 
 import cv2
 import numpy as np
@@ -24,6 +26,7 @@ from werkzeug.utils import secure_filename
 
 # ── project modules ────────────────────────────────────────────────────────
 from prediction import load_predictor
+from aws_config import s3, BUCKET_NAME
 
 # ── app config ─────────────────────────────────────────────────────────────
 app = Flask(__name__)
@@ -44,6 +47,7 @@ UPLOAD_FOLDER.mkdir(parents=True, exist_ok=True)
 
 # ── load predictor once at startup ─────────────────────────────────────────
 predictor = None
+
 
 def get_predictor():
     global predictor
@@ -129,7 +133,8 @@ def is_leaf_image(image_path: str) -> tuple:
 
     # ── Check 2: largest coherent region ─────────────────────────────────
     num_labels, _, stats, _ = cv2.connectedComponentsWithStats(
-        veg_mask, connectivity=8)
+        veg_mask, connectivity=8
+    )
     if num_labels > 1:
         largest_px = int(stats[1:, cv2.CC_STAT_AREA].max())
     else:
@@ -336,7 +341,7 @@ def predict():
         save_path.unlink(missing_ok=True)
         return redirect(url_for("index"))
 
-    # ── confidence check (catches images that pass colour filter but aren't leaves) ──
+    # ── confidence check ─────────────────────────────────────────────────
     top5_pct = [{"confidence": round(e["confidence"] * 100, 1),
                  "class": e["class"]} for e in top5]
     confident, conf_reason = is_confident_prediction(top5_pct)
@@ -344,6 +349,17 @@ def predict():
         save_path.unlink(missing_ok=True)
         flash(f"⚠️ {conf_reason}", "error")
         return redirect(url_for("index"))
+
+    # ── upload image to AWS S3 ────────────────────────────────────────────
+    try:
+        s3.upload_file(
+            str(save_path),
+            BUCKET_NAME,
+            f"leaf_images/{filename}"
+        )
+        print("Image successfully uploaded to AWS S3!")
+    except Exception as e:
+        print("AWS Upload Error:", e)
 
     # ── build display data ───────────────────────────────────────────────
     raw_class  = result["predicted_class"]
@@ -354,6 +370,27 @@ def predict():
     confidence = round(result["confidence"] * 100, 1)
     is_healthy = "healthy" in raw_class.lower()
     info       = disease_info(raw_class)
+
+    # ── save prediction details to AWS S3 ────────────────────────────────
+    try:
+        prediction_data = {
+            "image_filename": filename,
+            "predicted_disease": short_name,
+            "confidence": confidence,
+            "is_healthy": is_healthy,
+            "description": info["description"],
+            "recommended_action": info["action"],
+            "prediction_date": datetime.now(timezone.utc).isoformat()
+        }
+        s3.put_object(
+            Bucket=BUCKET_NAME,
+            Key=f"predictions/{filename}.json",
+            Body=json.dumps(prediction_data, indent=4),
+            ContentType="application/json"
+        )
+        print("Prediction result successfully saved to AWS S3!")
+    except Exception as e:
+        print("AWS Prediction Storage Error:", e)
 
     top5_display = []
     for entry in top5:
